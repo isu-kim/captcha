@@ -243,7 +243,7 @@ class AudioCaptcha(object):
     def create_wave_body(self, chars):
         voices = []
         inters = []
-        for key in chars:
+        for key in chars:  # Iterate over keys
             voices.append(self._twist_pick(key))
             v = random.randint(WAVE_SAMPLE_RATE, WAVE_SAMPLE_RATE * 3)
             inters.append(v)
@@ -252,14 +252,21 @@ class AudioCaptcha(object):
         length = max(durations) * len(chars) + reduce(operator.add, inters)
         bg = self.create_background_noise(length, chars)
 
+        sil = list()
+
         # begin
         pos = inters[0]
         for i, v in enumerate(voices):
+            tmp = [pos / 8000]
+            # print("Silence Started at " + str(pos / 8000))
             end = pos + len(v) + 1
-            bg[pos:end] = mix_wave(v, bg[pos:end])
+            bg[pos:end] = mix_wave(v, bg[pos:end])  # Synthesize two audios
             pos = end + inters[i]
+            # print("Silence Ended at " + str(end / 8000))
+            tmp.append(end / 8000)
+            sil.append(tmp)
 
-        return BEEP + SILENCE + BEEP + SILENCE + BEEP + bg + END_BEEP
+        return (BEEP + SILENCE + BEEP + SILENCE + BEEP + bg + END_BEEP, sil)
 
     def generate(self, chars):
         """Generate audio CAPTCHA data. The return data is a bytearray.
@@ -268,8 +275,9 @@ class AudioCaptcha(object):
         """
         if not self._cache:
             self.load()
-        body = self.create_wave_body(chars)
-        return patch_wave_header(body)
+        ret = self.create_wave_body(chars)
+        body = ret[0]
+        return (patch_wave_header(body), ret[1])
 
     def write(self, chars, output):
         """Generate and write audio CAPTCHA data to the output.
@@ -277,6 +285,6 @@ class AudioCaptcha(object):
         :param chars: text to be generated.
         :param output: output destionation.
         """
-        data = self.generate(chars)
+        data = self.generate(chars)[0]
         with open(output, 'wb') as f:
             return f.write(data)
