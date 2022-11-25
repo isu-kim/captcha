@@ -265,8 +265,18 @@ class AudioCaptcha(object):
             # print("Silence Ended at " + str(end / 8000))
             tmp.append(end / 8000)
             sil.append(tmp)
+        sil.append(pos / 8000)
 
-        return (BEEP + SILENCE + BEEP + SILENCE + BEEP + bg + END_BEEP, sil)
+        # Generate voice segments
+        voices = list()
+        for i in range(1, len(sil) - 1, 1):  # Generate internal segments.
+            start = sil[i - 1][1]
+            end = sil[i][0]
+            voices.append((start, end))
+
+        voices.append((sil[-2][1], sil[-1]))  # The last segment
+
+        return (BEEP + SILENCE + BEEP + SILENCE + BEEP + bg + END_BEEP, voices)
 
     def generate(self, chars):
         """Generate audio CAPTCHA data. The return data is a bytearray.
