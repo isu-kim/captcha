@@ -255,7 +255,7 @@ class AudioCaptcha(object):
         sil = list()
 
         # begin
-        #print(inters)
+        print(inters)
         pos = inters[0]
         lengths = list()
         starts = list()
@@ -264,16 +264,17 @@ class AudioCaptcha(object):
             #print(pos)
             tmp = [pos / 8000]
             #starts.append(pos / WAVE_SAMPLE_RATE)
-            # print("Silence Started at " + str(pos / WAVE_SAMPLE_RATE))
+            #print("Silence Started at " + str(pos / 8000))
             #print("V " + str(i) + " : " + str(len(v) + 1))
             lengths.append((len(v) + 1) / 8000)
             end = pos + len(v) + 1
             bg[pos:end] = mix_wave(v, bg[pos:end])  # Synthesize two audios
             pos = end + inters[i]
-            # print("Silence Ended at " + str(end / WAVE_SAMPLE_RATE))
+            #print("Silence Ended at " + str(end / 8000))
             tmp.append(end / 8000)
             starts.append(end / 8000)
             sil.append(tmp)
+        #print("LAST:" + str(pos / 8000))
         #sil.append(pos / WAVE_SAMPLE_RATE)
 
         #print(len(BEEP + SILENCE + BEEP + SILENCE + BEEP + bg))
@@ -284,7 +285,7 @@ class AudioCaptcha(object):
         # Generate voice segments
         voices = list()
         for start, length in zip(starts, lengths):
-            voices.append((round(start, 3), round(start + length, 2)))
+            voices.append((round(start, 3), round(start + length, 3)))
         #for i in range(1, len(sil) - 1, 1):  # Generate internal segments.
         #    start = sil[i - 1][1]
         #    end = start + inters[i] / WAVE_SAMPLE_RATE
@@ -292,7 +293,7 @@ class AudioCaptcha(object):
 
         #voices.append((sil[-2][1], sil[-1]))  # The last segment
 
-        return (BEEP + SILENCE + BEEP + SILENCE + BEEP + bg + END_BEEP, voices)
+        return (BEEP + SILENCE + BEEP + SILENCE + BEEP + bg + END_BEEP + SILENCE + SILENCE, voices)
 
     def generate(self, chars):
         """Generate audio CAPTCHA data. The return data is a bytearray.
