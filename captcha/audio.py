@@ -257,31 +257,40 @@ class AudioCaptcha(object):
         # begin
         #print(inters)
         pos = inters[0]
+        lengths = list()
+        starts = list()
         #print(list(durations))
         for i, v in enumerate(voices):
+            #print(pos)
             tmp = [pos / WAVE_SAMPLE_RATE]
+            #starts.append(pos / WAVE_SAMPLE_RATE)
             # print("Silence Started at " + str(pos / WAVE_SAMPLE_RATE))
+            #print("V " + str(i) + " : " + str(len(v) + 1))
+            lengths.append((len(v) + 1) / 8000)
             end = pos + len(v) + 1
             bg[pos:end] = mix_wave(v, bg[pos:end])  # Synthesize two audios
             pos = end + inters[i]
             # print("Silence Ended at " + str(end / WAVE_SAMPLE_RATE))
             tmp.append(end / WAVE_SAMPLE_RATE)
+            starts.append(end / WAVE_SAMPLE_RATE)
             sil.append(tmp)
         #sil.append(pos / WAVE_SAMPLE_RATE)
 
         #print(len(BEEP + SILENCE + BEEP + SILENCE + BEEP + bg))
-        sil.append(len(BEEP + SILENCE + BEEP + SILENCE + BEEP + bg) / 8000)
+        #sil.append(len(BEEP + SILENCE + BEEP + SILENCE + BEEP + bg) / 8000)
 
 
 
         # Generate voice segments
         voices = list()
-        for i in range(1, len(sil) - 1, 1):  # Generate internal segments.
-            start = sil[i - 1][1]
-            end = start + inters[i] / WAVE_SAMPLE_RATE
-            voices.append((start, end))
+        for start, length in zip(starts, lengths):
+            voices.append((start, start + length))
+        #for i in range(1, len(sil) - 1, 1):  # Generate internal segments.
+        #    start = sil[i - 1][1]
+        #    end = start + inters[i] / WAVE_SAMPLE_RATE
+        #    voices.append((start, end))
 
-        voices.append((sil[-2][1], sil[-1]))  # The last segment
+        #voices.append((sil[-2][1], sil[-1]))  # The last segment
 
         return (BEEP + SILENCE + BEEP + SILENCE + BEEP + bg + END_BEEP, voices)
 
