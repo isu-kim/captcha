@@ -23,7 +23,7 @@ if sys.version_info[0] != 2:
 
 __all__ = ['AudioCaptcha']
 
-WAVE_SAMPLE_RATE = 16000  # HZ
+WAVE_SAMPLE_RATE = 8000  # HZ
 WAVE_HEADER = bytearray(
     b'RIFF\x00\x00\x00\x00WAVEfmt \x10\x00\x00\x00\x01\x00\x01\x00'
     b'@\x1f\x00\x00@\x1f\x00\x00\x01\x00\x08\x00data'
@@ -255,24 +255,30 @@ class AudioCaptcha(object):
         sil = list()
 
         # begin
-        print(inters)
+        #print(inters)
         pos = inters[0]
+        #print(list(durations))
         for i, v in enumerate(voices):
-            tmp = [pos / 16000]
-            # print("Silence Started at " + str(pos / 16000))
+            tmp = [pos / WAVE_SAMPLE_RATE]
+            # print("Silence Started at " + str(pos / WAVE_SAMPLE_RATE))
             end = pos + len(v) + 1
             bg[pos:end] = mix_wave(v, bg[pos:end])  # Synthesize two audios
             pos = end + inters[i]
-            # print("Silence Ended at " + str(end / 16000))
-            tmp.append(end / 16000)
+            # print("Silence Ended at " + str(end / WAVE_SAMPLE_RATE))
+            tmp.append(end / WAVE_SAMPLE_RATE)
             sil.append(tmp)
-        sil.append(pos / 16000)
+        #sil.append(pos / WAVE_SAMPLE_RATE)
+
+        #print(len(BEEP + SILENCE + BEEP + SILENCE + BEEP + bg))
+        sil.append(len(BEEP + SILENCE + BEEP + SILENCE + BEEP + bg) / 8000)
+
+
 
         # Generate voice segments
         voices = list()
         for i in range(1, len(sil) - 1, 1):  # Generate internal segments.
             start = sil[i - 1][1]
-            end = start + inters[i] / 16000
+            end = start + inters[i] / WAVE_SAMPLE_RATE
             voices.append((start, end))
 
         voices.append((sil[-2][1], sil[-1]))  # The last segment
